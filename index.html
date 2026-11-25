@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f3f6f4">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Hà Giang 2026">
+  <meta name="description" content="Kế hoạch, lịch trình 6 ngày, cung đường, checklist và ngân sách chuyến đi Hà Nội – Hà Giang 30/11–05/12/2026.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Hà Giang 2026 · Hành trình 6 ngày</title>
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('haGiangTrip2026-theme') || 'auto';
+        var dark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) {
+          document.documentElement.dataset.theme = 'dark';
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0c1412');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-top">
+      <div class="brand" data-tab="overview" role="button" tabindex="0" aria-label="Về trang chủ">
+        <span class="brandmark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" fill="none">
+            <path d="M4 31L14.5 13L20.5 22L27.5 9L37 31Z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+            <path d="M13.5 31L20.5 25.5L27.5 31" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="10.5" cy="9" r="2.6" fill="#ffd28c"/>
+          </svg>
+        </span>
+        <div>
+          <div class="brandtitle">Hà Giang 2026</div>
+          <div class="branddate">30/11 — 05/12 · 2 người</div>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <button type="button" class="icon-btn" id="themeToggle" aria-label="Chuyển giao diện sáng/tối" title="Chuyển sáng / tối"></button>
+        <button type="button" class="header-action" data-tab="settings" aria-label="Cài đặt và sao lưu">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="headerStatus">Đã lưu</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="app-nav" aria-label="Điều hướng chính">
+    <div class="nav-inner" id="nav"></div>
+  </nav>
+
+  <main>
+    <!-- TAB 1: OVERVIEW -->
+    <section id="overview" class="panel active">
+      <div class="trip-hero">
+        <div class="trip-copy">
+          <span class="trip-kicker">CHUYẾN ĐI CỦA CHÚNG TA</span>
+          <h1>Hà Nội – Hà Giang</h1>
+          <p class="trip-sub">6 ngày · 5 đêm · Easy Rider · 30/11 – 05/12/2026</p>
+          <div class="hero-meta">
+            <span id="tripCountdown" class="trip-status">30/11 – 05/12/2026</span>
+            <span id="heroProgressPill" class="trip-status">0% hoàn thành</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="upNext"></div>
+
+      <div class="sectionline">
+        <h2>Tổng quan</h2>
+        <span class="small">Kế hoạch 2 người</span>
+      </div>
+      <div class="metrics" id="metrics"></div>
+
+      <div class="quick-actions">
+        <button type="button" class="quick" id="jumpToday">
+          <span class="qicon" data-icon="calendar"></span>
+          <div><b>Lịch hôm nay</b><small>Xem từng mốc giờ</small></div>
+        </button>
+        <button type="button" class="quick" data-tab="route">
+          <span class="qicon" data-icon="route"></span>
+          <div><b>Cung đường</b><small>22 điểm check-in</small></div>
+        </button>
+        <button type="button" class="quick" id="quickExpense">
+          <span class="qicon" data-icon="wallet"></span>
+          <div><b>Ghi chi tiêu</b><small>Thêm khoản thực trả</small></div>
+        </button>
+        <button type="button" class="quick" data-tab="bookings">
+          <span class="qicon" data-icon="ticket"></span>
+          <div><b>Đặt chỗ</b><small>Vé, phòng, liên hệ</small></div>
+        </button>
+      </div>
+
+      <div class="sectionline">
+        <h2>Khám phá điểm đến</h2>
+        <button type="button" data-tab="route" class="subtle-btn">Xem tất cả ›</button>
+      </div>
+      <div class="photo-strip" id="featured"></div>
+      <p class="small" style="margin:2px 0 14px">Vuốt ngang để xem thêm · Chạm ảnh để phóng to và mở bản đồ.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Hành trình 6 ngày</h3>
+          <div id="overviewDays"></div>
+        </div>
+        <div class="card">
+          <h3>Việc cần chốt trước khi đi</h3>
+          <div id="urgent"></div>
+          <div class="notice">
+            Xe 21:30 là lựa chọn ưu tiên. Đến Hà Giang 03:30–04:30, chỉ còn khoảng 2,5–3,5 giờ trước bữa sáng. Nâng cấp phòng riêng nếu hợp lý; không cố đi xe máy nếu quá mệt hoặc thời tiết nguy hiểm.
+          </div>
+          <button type="button" class="btn primary" data-tab="check" style="width:100%">Mở checklist chuẩn bị</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row spread">
+          <h3 style="margin:0">Thời tiết & chuẩn bị trang phục</h3>
+          <a href="https://nchmf.gov.vn/" target="_blank" rel="noopener" class="small">NCHMF ↗</a>
+        </div>
+        <p class="small" style="margin-top:6px">Dữ liệu tham khảo đã tra ngày 25/11; cần kiểm tra lại 28–29/11 và trước mỗi ngày đi đèo. Chuẩn bị đồ chịu lạnh 5–10°C khi gặp gió.</p>
+        <div class="weather-grid" id="weatherGrid"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: SCHEDULE -->
+    <section id="schedule" class="panel">
+      <h2>Lịch trình & thời gian biểu</h2>
+      <p class="small">Mốc Lu = theo PDF/tư vấn Lu Travel; mốc đề xuất = kế hoạch linh hoạt. Chạm từng mốc để đánh dấu hoàn thành, vuốt ngang để đổi ngày.</p>
+      <div class="days-bar" id="dayTabs"></div>
+      <div class="day-actions">
+        <button type="button" class="btn" id="prevDay">‹ Ngày trước</button>
+        <button type="button" class="btn" id="todayDay">Hôm nay</button>
+        <button type="button" class="btn" id="nextDay">Ngày sau ›</button>
+      </div>
+      <div id="dayContent"></div>
+    </section>
+
+    <!-- TAB 3: ROUTE & CHECK-IN -->
+    <section id="route" class="panel">
+      <h2>Sơ đồ cung đường & Check-in</h2>
+      <p class="small">Sơ đồ thứ tự tham quan, không theo tỷ lệ địa lý. Mở Google Maps để xem đường đi thực tế; tuyến xe máy do xế bản địa quyết định.</p>
+
+      <div class="card">
+        <div class="row spread" style="margin-bottom:6px">
+          <h3 style="margin:0">Vòng cung cao nguyên đá</h3>
+          <span class="pill">~350–390 km</span>
+        </div>
+        <details class="map-detail" id="mapDetail" open>
+          <summary>Xem sơ đồ toàn tuyến</summary>
+          <div class="map-scroll">
+            <svg class="route-svg" viewBox="0 0 720 600" role="img" aria-label="Sơ đồ vòng Hà Giang ba ngày">
+              <defs>
+                <marker id="arrow1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#0f6b56"/></marker>
+                <marker id="arrow2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#c96f28"/></marker>
+                <marker id="arrow3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#4c6fa8"/></marker>
+              </defs>
+              <path d="M0 600L0 430L110 265L185 345L305 140L425 265L530 90L720 315L720 600Z" fill="currentColor" opacity="0.045"/>
+              <path d="M0 600V520L195 345L275 450L445 265L555 415L720 225L720 600Z" fill="currentColor" opacity="0.06"/>
+              <g id="routeSvg"></g>
+            </svg>
+          </div>
+        </details>
+        <div class="row spaced">
+          <span class="pill">01/12 · Hà Giang → Đồng Văn</span>
+          <span class="pill warn">02/12 · Lũng Cú → Pả Vi</span>
+          <span class="pill blue">03/12 · Pả Vi → Hà Giang</span>
+        </div>
+      </div>
+
+      <div id="routeLinks" class="grid"></div>
+
+      <div class="sectionline">
+        <h2>22 điểm check-in</h2>
+        <span id="placeProgress" class="pill ok"></span>
+      </div>
+      <div id="placeFilters" class="chips" role="tablist" aria-label="Lọc điểm check-in"></div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="placeSearch" type="search" placeholder="Tìm địa danh, trải nghiệm…" aria-label="Tìm điểm check-in">
+      </div>
+      <div id="places" class="places-grid"></div>
+    </section>
+
+    <!-- TAB 4: CHECKLIST -->
+    <section id="check" class="panel">
+      <h2>Checklist chuẩn bị & hành lý</h2>
+      <p class="small">Số lượng tính cho hai người. Lu Travel cấp mũ bảo hiểm, áo mưa, bọc đồ, bọc giày và nước suối — nhớ xác nhận kích cỡ trước khi đi.</p>
+
+      <div class="card">
+        <div class="row spread">
+          <h3 style="margin:0">Tiến độ chuẩn bị</h3>
+          <strong id="checkProgress" class="tabular"></strong>
+        </div>
+        <div class="bar"><i id="checkBar"></i></div>
+        <div class="row spaced">
+          <div class="chips" id="checkFilters" style="margin:0;padding:0;flex:1">
+            <button type="button" class="chip active" data-cfilter="all">Tất cả</button>
+            <button type="button" class="chip" data-cfilter="todo">Chưa xong</button>
+            <button type="button" class="chip" data-cfilter="done">Đã xong</button>
+          </div>
+          <button type="button" class="btn tiny primary" id="addTaskBtn">+ Việc riêng</button>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="checkSearch" type="search" placeholder="Tìm đồ dùng hoặc công việc…" aria-label="Tìm checklist">
+      </div>
+      <div id="checkGroups" class="grid"></div>
+    </section>
+
+    <!-- TAB 5: BUDGET -->
+    <section id="budget" class="panel">
+      <h2>Ngân sách & sổ chi tiêu</h2>
+      <p class="small">Đơn vị VND · giá tour và vé bay là mức lập kế hoạch. Không nhập trùng chi phí ăn, phòng, vé tham quan đã nằm trong tour.</p>
+
+      <div class="metrics" id="budgetMetrics"></div>
+
+      <div class="card">
+        <div class="row spread">
+          <h3 style="margin:0">Sổ chi tiêu thực tế</h3>
+          <button type="button" class="btn tiny primary" id="openAddExpense">+ Ghi chi tiêu</button>
+        </div>
+        <p class="small" style="margin-top:6px">Ghi từng khoản đã thanh toán hoặc tiền cọc; tự động cộng vào từng nhóm dự trù.</p>
+        <div class="expense-list" id="expenseList"></div>
+        <div class="row spaced">
+          <button type="button" class="btn tiny" id="csv">Xuất CSV chi phí</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row spread" style="margin-bottom:8px">
+          <h3 style="margin:0">Ngân sách dự trù theo nhóm</h3>
+          <span class="small">Chạm số tiền để sửa</span>
+        </div>
+        <div class="budget-cards" id="budgetCards"></div>
+      </div>
+
+      <div class="card">
+        <h3>Ước tính phát sinh Hà Giang (trong nhóm phát sinh)</h3>
+        <div class="extras-list" id="extras"></div>
+        <p class="small spaced" style="margin-bottom:0">Các giá là ước tính tham khảo; không cộng thêm lần nữa vào ngân sách tổng.</p>
+      </div>
+    </section>
+
+    <!-- TAB 6: BOOKINGS -->
+    <section id="bookings" class="panel">
+      <h2>Đặt chỗ & xác nhận dịch vụ</h2>
+
+      <div class="card">
+        <h3>Liên hệ nhanh</h3>
+        <div class="row">
+          <a class="btn primary" href="tel:0926159995">Gọi Lu Travel · 0926 159 995</a>
+          <a class="btn" href="mailto:lutravel.hg@gmail.com">Email</a>
+          <a class="btn" href="https://www.lutravel.vn/" target="_blank" rel="noopener">Website ↗</a>
+        </div>
+        <div class="row spaced">
+          <a class="btn tiny" href="https://www.vietnamairlines.com/" target="_blank" rel="noopener">Vietnam Airlines ↗</a>
+          <a class="btn tiny" href="https://www.vietjetair.com/" target="_blank" rel="noopener">Vietjet ↗</a>
+          <a class="btn tiny" href="https://www.google.com/travel/flights" target="_blank" rel="noopener">Google Flights ↗</a>
+          <a class="btn tiny danger" href="tel:112">Cứu nạn 112</a>
+          <a class="btn tiny danger" href="tel:115">Cấp cứu 115</a>
+        </div>
+        <p class="small spaced" style="margin-bottom:0">VN1562 15:45–17:45 (30/11) và VN1559 13:00–15:00 (05/12) là chuyến mục tiêu, cần kiểm tra lịch bay, giá và chỗ trước khi mua. VJ774/VJ1781 là phương án thay thế.</p>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Đã được Lu Travel xác nhận / công bố</h3>
+          <ul class="bullet-list" id="included"></ul>
+        </div>
+        <div class="card">
+          <h3>Chưa xác nhận / ngoài tour</h3>
+          <ul class="bullet-list warn" id="unconfirmed"></ul>
+          <div class="notice" style="margin-bottom:0">
+            Bảo hiểm tối đa 50 triệu/vụ theo bảng dịch vụ; hỏi kỹ điều khoản phạm vi đi xe máy. Không đăng mã đặt chỗ hay giấy tờ cá nhân lên repository công khai.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Thông tin đặt chỗ – tự điền</h3>
+        <p class="small">Lưu cục bộ trên thiết bị này, không gửi lên GitHub. Không nhập số CCCD, thẻ ngân hàng hoặc mật khẩu.</p>
+        <div class="fields" id="bookingFields"></div>
+      </div>
+    </section>
+
+    <!-- TAB 7: NOTES -->
+    <section id="notes" class="panel">
+      <h2>Bảng trắng & nhật ký hành trình</h2>
+
+      <div class="card">
+        <div class="row spread" style="margin-bottom:10px">
+          <h3 style="margin:0">Hoạt động tự bổ sung</h3>
+          <button type="button" class="btn tiny primary" id="openAddCustom">+ Thêm hoạt động</button>
+        </div>
+        <div id="customList"></div>
+      </div>
+
+      <div class="card">
+        <h3>Nhật ký theo ngày</h3>
+        <div id="journals" class="fields"></div>
+      </div>
+
+      <div class="card">
+        <h3>Ghi chú chung</h3>
+        <textarea id="generalNote" rows="5" placeholder="Những món muốn ăn, quà muốn mua, thay đổi lộ trình, điều cần nhớ…"></textarea>
+      </div>
+    </section>
+
+    <!-- TAB 8: MORE (MOBILE HUB) -->
+    <section id="more" class="panel">
+      <h2>Tiện ích</h2>
+      <p class="small">Truy cập nhanh bản đồ, đặt chỗ, nhật ký và cài đặt offline.</p>
+
+      <div class="more-list">
+        <button type="button" data-tab="route">
+          <span class="more-icon" data-icon="route"></span>
+          <span class="more-copy"><b>Cung đường & 22 điểm check-in</b><small>Sơ đồ vòng cung, ảnh và Google Maps</small></span>
+          <span class="more-arrow">›</span>
+        </button>
+        <button type="button" data-tab="bookings">
+          <span class="more-icon" data-icon="ticket"></span>
+          <span class="more-copy"><b>Đặt chỗ & liên hệ</b><small>Thông tin tour Lu Travel, vé bay, khách sạn</small></span>
+          <span class="more-arrow">›</span>
+        </button>
+        <button type="button" data-tab="notes">
+          <span class="more-icon" data-icon="note"></span>
+          <span class="more-copy"><b>Bảng trắng & nhật ký</b><small>Hoạt động tự thêm và ghi chú từng ngày</small></span>
+          <span class="more-arrow">›</span>
+        </button>
+        <button type="button" data-tab="settings">
+          <span class="more-icon" data-icon="settings"></span>
+          <span class="more-copy"><b>Cài đặt, giao diện & sao lưu</b><small>Chế độ tối, cài PWA offline, xuất/nhập JSON</small></span>
+          <span class="more-arrow">›</span>
+        </button>
+      </div>
+
+      <div class="card">
+        <h3>Liên hệ khẩn & nhà tour</h3>
+        <div class="row">
+          <a class="btn primary" href="tel:0926159995" style="flex:1">Gọi Lu Travel · 0926 159 995</a>
+          <a class="btn danger" href="tel:112">112</a>
+          <a class="btn danger" href="tel:115">115</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 9: SETTINGS -->
+    <section id="settings" class="panel">
+      <h2>Cài đặt & sao lưu</h2>
+
+      <div class="card">
+        <h3>Giao diện hiển thị</h3>
+        <p class="small">Chọn chế độ tối để dịu mắt khi xem trên xe cabin ban đêm hoặc tại homestay.</p>
+        <div class="theme-switch" id="themeSwitch">
+          <button type="button" data-theme-choice="auto">Tự động</button>
+          <button type="button" data-theme-choice="light">Sáng</button>
+          <button type="button" data-theme-choice="dark">Tối</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Cài ứng dụng lên màn hình chính (PWA)</h3>
+        <p id="pwaStatus" class="small" role="status">Đang kiểm tra khả năng sử dụng offline…</p>
+        <button type="button" id="installApp" class="btn primary" hidden style="margin-bottom:10px">Cài ứng dụng vào điện thoại</button>
+        <p class="small" style="margin-bottom:0">
+          <b>Android Chrome:</b> menu ⋮ → Cài đặt ứng dụng / Thêm vào màn hình chính.<br>
+          <b>iPhone Safari:</b> nút Chia sẻ (↑) → Thêm vào MH chính.<br>
+          Mở trang lần đầu khi có mạng để lưu offline toàn bộ lịch trình và ảnh nội bộ.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Sao lưu & dữ liệu của hai bạn</h3>
+        <p class="small">Website tĩnh lưu cục bộ bằng localStorage (tương thích hoàn toàn JSON v1). Không tự đồng bộ giữa thiết bị; hãy xuất JSON để chuyển sang máy khác.</p>
+        <div class="row">
+          <button type="button" id="backup" class="btn primary">Xuất JSON sao lưu</button>
+          <button type="button" id="restore" class="btn">Nhập JSON</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden>
+          <button type="button" id="print" class="btn">In / Lưu PDF</button>
+          <button type="button" id="reset" class="btn danger">Xóa dữ liệu cá nhân</button>
+        </div>
+        <p id="storageStatus" class="small spaced" role="status" style="margin-bottom:0"></p>
+      </div>
+
+      <div class="card">
+        <h3>Căn cứ lập kế hoạch</h3>
+        <p class="small" style="margin-bottom:0">
+          PDF Lu Travel “3N2D Đồng Văn - Mèo Vạc”; bảng dịch vụ tour xe máy xế đèo; tư vấn nhà tour về xe 21:30/23:00/23:45, cabin đôi, đón sảnh Nội Bài, dorm và gửi vali; dự báo tham khảo 25/11/2026. Giá và giờ bay trong bản này là mục tiêu, không phải vé đã đặt. Không có giá live, theo dõi GPS hoặc đồng bộ máy chủ.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="foot">
+      HÀ GIANG 2026 · Kế hoạch cá nhân · 30/11–05/12 · Phiên bản 5.0 · Mobile PWA
+      <span id="saveStatus" role="status"></span>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Photo Lightbox Modal -->
+  <dialog class="modal" id="photoDialog" aria-labelledby="photoModalTitle">
+    <button type="button" class="modal-close" id="photoClose" aria-label="Đóng ảnh">×</button>
+    <div class="photo-modal-media" id="photoModalImage"></div>
+    <div class="modal-body">
+      <h2 id="photoModalTitle" style="margin-bottom:4px"></h2>
+      <p id="photoModalDetail" style="margin-bottom:6px"></p>
+      <p class="small" id="photoModalCredit"></p>
+      <div class="row spaced">
+        <a class="btn primary" id="photoModalMap" target="_blank" rel="noopener">Mở Google Maps ↗</a>
+        <a class="btn" id="photoModalSource" target="_blank" rel="noopener" hidden>Nguồn ảnh ↗</a>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Expense Bottom-Sheet Modal -->
+  <dialog class="modal sheet" id="expenseDialog" aria-labelledby="expenseModalTitle">
+    <div class="modal-head">
+      <h3 id="expenseModalTitle">Ghi chi tiêu</h3>
+      <button type="button" class="sheet-close" id="expenseClose" aria-label="Đóng">×</button>
+    </div>
+    <form id="expenseForm" class="form-stack">
+      <input type="hidden" id="expId">
+      <label>
+        Nội dung chi *
+        <input id="expName" required placeholder="VD: Cà phê Lô Lô Chải, cọc tour…">
+      </label>
+      <div class="form-row-2">
+        <label>
+          Số tiền (VND) *
+          <input id="expAmount" type="number" inputmode="numeric" min="0" step="1000" required placeholder="0">
+        </label>
+        <label>
+          Ngày chi
+          <input id="expDate" type="date">
+        </label>
+      </div>
+      <div class="chips" style="margin:0;padding:0">
+        <button type="button" class="chip" data-quick-amt="50000">+50k</button>
+        <button type="button" class="chip" data-quick-amt="100000">+100k</button>
+        <button type="button" class="chip" data-quick-amt="200000">+200k</button>
+        <button type="button" class="chip" data-quick-amt="500000">+500k</button>
+        <button type="button" class="chip" data-quick-amt="1000000">+1 triệu</button>
+      </div>
+      <div class="form-row-2">
+        <label>
+          Nhóm ngân sách
+          <select id="expCat"></select>
+        </label>
+        <label>
+          Người trả
+          <input id="expPayer" placeholder="VD: Hoàng / Chung">
+        </label>
+      </div>
+      <label>
+        Ghi chú
+        <input id="expNote" placeholder="Tùy chọn">
+      </label>
+      <div class="row spread" style="margin-top:4px">
+        <button type="button" class="btn danger" id="expDeleteBtn" hidden>Xóa dòng</button>
+        <div class="row" style="margin-left:auto">
+          <button type="button" class="btn" id="expCancelBtn">Hủy</button>
+          <button type="submit" class="btn primary">Lưu chi tiêu</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Custom Activity Bottom-Sheet Modal -->
+  <dialog class="modal sheet" id="customDialog" aria-labelledby="customModalTitle">
+    <div class="modal-head">
+      <h3 id="customModalTitle">Thêm hoạt động riêng</h3>
+      <button type="button" class="sheet-close" id="customClose" aria-label="Đóng">×</button>
+    </div>
+    <form id="customForm" class="form-stack">
+      <label>
+        Hoạt động / địa điểm *
+        <input id="cusName" required placeholder="VD: Ăn thắng dền phố cổ">
+      </label>
+      <div class="form-row-2">
+        <label>
+          Ngày
+          <input id="cusDate" type="date">
+        </label>
+        <label>
+          Giờ
+          <input id="cusTime" type="time">
+        </label>
+      </div>
+      <label>
+        Ghi chú
+        <input id="cusNote" placeholder="Địa chỉ, gợi ý…">
+      </label>
+      <div class="row" style="justify-content:flex-end">
+        <button type="button" class="btn" id="customCancelBtn">Hủy</button>
+        <button type="submit" class="btn primary">Thêm hoạt động</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
