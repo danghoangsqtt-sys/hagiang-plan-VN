@@ -1,4 +1,4 @@
-const CACHE = 'ha-giang-planner-mobile-v5.0.0';
+const CACHE = 'ha-giang-planner-mobile-v5.0.1';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,7 +7,8 @@ const APP_SHELL = [
   './app.js',
   './manifest.webmanifest',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './icon-maskable-512.png'
 ];
 const MEDIA = [
   './photos/cabin.webp',
