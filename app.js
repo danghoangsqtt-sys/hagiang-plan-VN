@@ -7,6 +7,7 @@
   const D = window.TRIP_DATA;
   const STORAGE_KEY = 'haGiangTrip2026-v1';
   const THEME_KEY = 'haGiangTrip2026-theme';
+  const SYNC_TIME_KEY = 'haGiangTrip2026-lastSync';
 
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
@@ -1270,9 +1271,181 @@
   $('#photoClose').onclick = () => $('#photoDialog').close();
   $('#photoDialog').onclick = (e) => { if (e.target === $('#photoDialog')) $('#photoDialog').close(); };
 
-  // Backup / Restore / CSV / Print / Reset
+  // --- Backup / Smart 2-Phone Merge / Restore / CSV / Print / Reset ---
+  function encodeSyncCode(obj) {
+    const bytes = new TextEncoder().encode(JSON.stringify(obj));
+    let bin = '';
+    bytes.forEach((b) => { bin += String.fromCharCode(b); });
+    return 'HG26:' + btoa(bin);
+  }
+
+  function decodeSyncInput(raw) {
+    const text = String(raw || '').trim();
+    if (!text) throw new Error('Trống');
+    const match = text.match(/HG26:([A-Za-z0-9+/=]+)/);
+    if (match) {
+      const bin = atob(match[1]);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return normalize(JSON.parse(new TextDecoder().decode(bytes)));
+    }
+    return normalize(JSON.parse(text));
+  }
+
+  function mergeStates(local, incoming) {
+    const out = freshState();
+    const defaults = freshState().plans;
+
+    for (const k of ['checks', 'events', 'places']) {
+      const keys = new Set([...Object.keys(local[k] || {}), ...Object.keys(incoming[k] || {})]);
+      keys.forEach((key) => {
+        if (local[k]?.[key] || incoming[k]?.[key]) out[k][key] = true;
+      });
+    }
+
+    for (const [code] of D.budgets) {
+      const lv = num(local.plans[code]);
+      const iv = num(incoming.plans[code]);
+      const dv = num(defaults[code]);
+      if (lv === dv && iv !== dv) out.plans[code] = iv;
+      else if (iv === dv && lv !== dv) out.plans[code] = lv;
+      else out.plans[code] = iv || lv;
+    }
+
+    const expMap = new Map();
+    const expSig = (x) => `${x.date}|${x.name.toLowerCase()}|${x.cat}|${num(x.amount)}|${x.payer.toLowerCase()}`;
+    const seenSigs = new Set();
+    for (const e of [...local.expenses, ...incoming.expenses]) {
+      if (isBlankExpense(e)) continue;
+      if (expMap.has(e.id)) continue;
+      const sig = expSig(e);
+      if (seenSigs.has(sig)) continue;
+      seenSigs.add(sig);
+      expMap.set(e.id, { ...e });
+    }
+    out.expenses = Array.from(expMap.values());
+
+    const cusMap = new Map();
+    for (const c of [...local.custom, ...incoming.custom]) {
+      if (isBlankCustom(c)) continue;
+      const prev = cusMap.get(c.id);
+      cusMap.set(c.id, prev ? { ...prev, ...c, done: !!(prev.done || c.done) } : { ...c });
+    }
+    out.custom = Array.from(cusMap.values());
+
+    const taskMap = new Map();
+    for (const t of [...local.extraTasks, ...incoming.extraTasks]) {
+      const key = t.name.toLowerCase();
+      const prev = taskMap.get(key);
+      taskMap.set(key, prev ? { ...prev, done: !!(prev.done || t.done) } : { ...t });
+    }
+    out.extraTasks = Array.from(taskMap.values());
+
+    for (const k of ['bookings', 'journals']) {
+      const keys = new Set([...Object.keys(local[k] || {}), ...Object.keys(incoming[k] || {})]);
+      keys.forEach((key) => {
+        const a = String(local[k]?.[key] || '').trim();
+        const b = String(incoming[k]?.[key] || '').trim();
+        if (a && b && a !== b) {
+          out[k][key] = a.includes(b) ? a : b.includes(a) ? b : `${a}\n${b}`;
+        } else {
+          out[k][key] = a || b;
+        }
+      });
+    }
+
+    const na = String(local.note || '').trim();
+    const nb = String(incoming.note || '').trim();
+    out.note = na && nb && na !== nb ? (na.includes(nb) ? na : nb.includes(na) ? nb : `${na}\n---\n${nb}`) : na || nb;
+    return out;
+  }
+
+  function updateSyncTimestamp(actionLabel) {
+    try {
+      const now = new Intl.DateTimeFormat('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+      }).format(new Date());
+      localStorage.setItem(SYNC_TIME_KEY, `${actionLabel} lúc ${now}`);
+    } catch (e) {}
+    renderLastSync();
+  }
+
+  function renderLastSync() {
+    const el = $('#lastSyncStatus');
+    if (!el) return;
+    let info = '';
+    try { info = localStorage.getItem(SYNC_TIME_KEY) || ''; } catch (e) {}
+    el.textContent = info
+      ? `Lần sao lưu / đồng bộ gần nhất: ${info}`
+      : 'Chưa sao lưu lần nào trên thiết bị này.';
+  }
+
+  $('#shareZalo').onclick = async () => {
+    const code = encodeSyncCode(state);
+    const shareText = `Đồng bộ Hà Giang 2026 (dán vào mục Tiện ích → Cài đặt → Dán mã từ Zalo):\n${code}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Đồng bộ Hà Giang 2026', text: shareText });
+        updateSyncTimestamp('Đã gửi chia sẻ');
+        toast('Đã mở chia sẻ qua Zalo');
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(code);
+      updateSyncTimestamp('Đã sao chép mã');
+      toast('Đã sao chép mã — mở Zalo và Dán gửi cho vợ/chồng');
+    } catch (err) {
+      download('ha-giang-2026-backup.json', JSON.stringify(state, null, 2), 'application/json');
+      updateSyncTimestamp('Đã xuất file JSON');
+      toast('Đã tải xuống file JSON để gửi qua Zalo');
+    }
+  };
+
+  $('#openPasteSync').onclick = () => {
+    $('#syncTextInput').value = '';
+    const d = $('#syncDialog');
+    if (d.showModal) d.showModal();
+    else d.setAttribute('open', '');
+    setTimeout(() => $('#syncTextInput').focus(), 40);
+  };
+  $('#syncClose').onclick = () => $('#syncDialog').close();
+  $('#syncDialog').onclick = (e) => { if (e.target === $('#syncDialog')) $('#syncDialog').close(); };
+
+  $('#syncMergeBtn').onclick = () => {
+    try {
+      const incoming = decodeSyncInput($('#syncTextInput').value);
+      state = mergeStates(state, incoming);
+      renderAll();
+      updateSyncTimestamp('Đã gộp 2 máy');
+      $('#syncDialog').close();
+      toast('Đã gộp dữ liệu của cả 2 máy thành công!');
+    } catch (err) {
+      toast('Mã không hợp lệ — hãy sao chép đúng đoạn HG26:…');
+    }
+  };
+
+  $('#syncReplaceBtn').onclick = () => {
+    try {
+      const incoming = decodeSyncInput($('#syncTextInput').value);
+      if (confirm('Thay toàn bộ dữ liệu máy này bằng dữ liệu vừa dán?')) {
+        state = incoming;
+        renderAll();
+        updateSyncTimestamp('Đã khôi phục toàn bộ');
+        $('#syncDialog').close();
+        toast('Đã thay toàn bộ dữ liệu');
+      }
+    } catch (err) {
+      toast('Mã không hợp lệ — hãy sao chép đúng đoạn HG26:…');
+    }
+  };
+
   $('#backup').onclick = () => {
     download('ha-giang-2026-backup.json', JSON.stringify(state, null, 2), 'application/json');
+    updateSyncTimestamp('Đã xuất file JSON');
     toast('Đã tải xuống file sao lưu JSON');
   };
   $('#restore').onclick = () => $('#importFile').click();
@@ -1281,10 +1454,17 @@
     if (!file) return;
     try {
       const parsed = normalize(JSON.parse(await file.text()));
-      if (confirm('Thay toàn bộ dữ liệu hiện tại bằng bản sao lưu này?')) {
+      const doMerge = confirm('Bấm OK để GỘP dữ liệu với máy này (khuyên dùng).\nBấm Cancel nếu muốn chọn thay toàn bộ.');
+      if (doMerge) {
+        state = mergeStates(state, parsed);
+        renderAll();
+        updateSyncTimestamp('Đã gộp từ file JSON');
+        toast('Đã gộp dữ liệu từ file JSON');
+      } else if (confirm('Xác nhận THAY TOÀN BỘ dữ liệu máy này bằng file JSON?')) {
         state = parsed;
         renderAll();
-        toast('Đã khôi phục dữ liệu thành công');
+        updateSyncTimestamp('Đã khôi phục từ file JSON');
+        toast('Đã khôi phục toàn bộ dữ liệu');
       }
     } catch (err) {
       toast('File JSON không hợp lệ.');
@@ -1375,5 +1555,6 @@
     $('#mapDetail').open = false;
   }
   renderAll();
+  renderLastSync();
   showTab(location.hash.slice(1) || 'overview');
 })();

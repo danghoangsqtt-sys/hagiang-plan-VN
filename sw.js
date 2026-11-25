@@ -1,4 +1,4 @@
-const CACHE = 'ha-giang-planner-mobile-v5.0.1';
+const CACHE = 'ha-giang-planner-mobile-v5.0.2';
 const APP_SHELL = [
   './',
   './index.html',

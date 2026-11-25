@@ -378,11 +378,21 @@
       </div>
 
       <div class="card">
-        <h3>Sao lưu & dữ liệu của hai bạn</h3>
-        <p class="small">Website tĩnh lưu cục bộ bằng localStorage (tương thích hoàn toàn JSON v1). Không tự đồng bộ giữa thiết bị; hãy xuất JSON để chuyển sang máy khác.</p>
+        <h3>Đồng bộ nhanh 2 điện thoại (qua Zalo · không cần mạng/server)</h3>
+        <p class="small">Dữ liệu lưu cục bộ trên từng máy. Để đồng bộ giữa hai vợ chồng mà <b>không làm mất mục của nhau</b>, bấm gửi mã qua Zalo rồi máy kia bấm <b>Dán &amp; Gộp 2 máy</b>.</p>
         <div class="row">
-          <button type="button" id="backup" class="btn primary">Xuất JSON sao lưu</button>
-          <button type="button" id="restore" class="btn">Nhập JSON</button>
+          <button type="button" id="shareZalo" class="btn primary">Gửi qua Zalo / Sao chép mã</button>
+          <button type="button" id="openPasteSync" class="btn">Dán mã từ Zalo (Gộp 2 máy)</button>
+        </div>
+        <p id="lastSyncStatus" class="small spaced" style="margin-bottom:0"></p>
+      </div>
+
+      <div class="card">
+        <h3>Sao lưu tệp JSON &amp; dữ liệu</h3>
+        <p class="small">Tương thích hoàn toàn JSON v1. Nhớ chốt <b>1 đường link cố định duy nhất</b> trước khi nhập dữ liệu thật; không đưa file JSON cá nhân lên GitHub.</p>
+        <div class="row">
+          <button type="button" id="backup" class="btn">Xuất file JSON</button>
+          <button type="button" id="restore" class="btn">Nhập file JSON</button>
           <input id="importFile" type="file" accept="application/json,.json" hidden>
           <button type="button" id="print" class="btn">In / Lưu PDF</button>
           <button type="button" id="reset" class="btn danger">Xóa dữ liệu cá nhân</button>
@@ -506,6 +516,28 @@
         <button type="submit" class="btn primary">Thêm hoạt động</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- Sync / Smart Merge Bottom-Sheet Modal -->
+  <dialog class="modal sheet" id="syncDialog" aria-labelledby="syncModalTitle">
+    <div class="modal-head">
+      <h3 id="syncModalTitle">Nhập dữ liệu từ Zalo</h3>
+      <button type="button" class="sheet-close" id="syncClose" aria-label="Đóng">×</button>
+    </div>
+    <div class="form-stack">
+      <label>
+        Dán đoạn mã (HG26:…) hoặc nội dung JSON nhận từ Zalo
+        <textarea id="syncTextInput" rows="5" placeholder="Dán mã bắt đầu bằng HG26:... vào đây"></textarea>
+      </label>
+      <p class="small" style="margin:0">
+        <b>Gộp 2 máy (Khuyên dùng):</b> Giữ lại toàn bộ checklist đã tích và các khoản chi của <b>cả hai vợ chồng</b>, không xóa dữ liệu máy này.<br>
+        <b>Thay toàn bộ:</b> Ghi đè hoàn toàn theo dữ liệu vừa dán.
+      </p>
+      <div class="row spread" style="margin-top:4px">
+        <button type="button" class="btn" id="syncReplaceBtn">Thay toàn bộ</button>
+        <button type="button" class="btn primary" id="syncMergeBtn">Gộp 2 máy</button>
+      </div>
+    </div>
   </dialog>
 
   <script src="data.js"></script>
